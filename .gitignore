@@ -1,2 +1,4 @@
 *.class
 *.log
+cs449-Template-M1/data/*
+
