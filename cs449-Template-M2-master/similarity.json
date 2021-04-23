@@ -1,0 +1,42 @@
+{
+  "Q2.3.3" : {
+    "NumberOfSimilarityComputationsForU1BaseDataset" : 0
+  },
+  "Q2.3.7" : {
+    "DurationInMicrosecForComputingSimilarities" : {
+      "min" : 0.0,
+      "max" : 0.0,
+      "average" : 0.0,
+      "stddev" : 0.0
+    },
+    "AverageTimeInMicrosecPerSuv" : 0.0,
+    "RatioBetweenTimeToComputeSimilarityOverTimeToPredict" : 0.0
+  },
+  "Q2.3.4" : {
+    "CosineSimilarityStatistics" : {
+      "min" : 0.0,
+      "max" : 0.0,
+      "average" : 0.0,
+      "stddev" : 0.0
+    }
+  },
+  "Q2.3.5" : {
+    "TotalBytesToStoreNonZeroSimilarityComputationsForU1BaseDataset" : 0
+  },
+  "Q2.3.1" : {
+    "CosineBasedMae" : 0.0,
+    "CosineMinusBaselineDifference" : 0.0
+  },
+  "Q2.3.6" : {
+    "DurationInMicrosecForComputingPredictions" : {
+      "min" : 0.0,
+      "max" : 0.0,
+      "average" : 0.0,
+      "stddev" : 0.0
+    }
+  },
+  "Q2.3.2" : {
+    "JaccardMae" : 0.0,
+    "JaccardMinusCosineDifference" : 0.0
+  }
+}

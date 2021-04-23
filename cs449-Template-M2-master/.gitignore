@@ -1,0 +1,10 @@
+.DS_Store
+.bsp
+**/*.swp
+data/.DS_Store
+data/ml-100k
+project/project
+project/target
+src/main/scala/project/
+src/main/scala/target/
+target/
