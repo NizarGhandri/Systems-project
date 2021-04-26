@@ -48,7 +48,8 @@ object Predictor extends App {
   })
   assert(test.count == 20000, "Invalid test data")
 
-  Utils.cosine_prediction(test, train)
+  val cosine_MAE = Utils.cosine_prediction(test, train)
+  val jaccard_MAE = Utils.jaccard_prediction(test, train)
 
   // Save answers as JSON
   def printToFile(content: String,
@@ -67,13 +68,13 @@ object Predictor extends App {
         implicit val formats = org.json4s.DefaultFormats
         val answers: Map[String, Any] = Map(
           "Q2.3.1" -> Map(
-            "CosineBasedMae" -> 0.0, // Datatype of answer: Double
-            "CosineMinusBaselineDifference" -> 0.0 // Datatype of answer: Double
+            "CosineBasedMae" -> cosine_MAE, // Datatype of answer: Double
+            "CosineMinusBaselineDifference" -> (cosine_MAE - Utils.baseline_MAE) // Datatype of answer: Double
           ),
 
           "Q2.3.2" -> Map(
-            "JaccardMae" -> 0.0, // Datatype of answer: Double
-            "JaccardMinusCosineDifference" -> 0.0 // Datatype of answer: Double
+            "JaccardMae" -> jaccard_MAE, // Datatype of answer: Double
+            "JaccardMinusCosineDifference" -> (jaccard_MAE - cosine_MAE) // Datatype of answer: Double
           ),
 
           "Q2.3.3" -> Map(
