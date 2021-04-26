@@ -24,8 +24,8 @@
     "TotalBytesToStoreNonZeroSimilarityComputationsForU1BaseDataset" : 0
   },
   "Q2.3.1" : {
-    "CosineBasedMae" : 0.7474736923652145,
-    "CosineMinusBaselineDifference" : -0.019426307634785478
+    "CosineBasedMae" : 0,
+    "CosineMinusBaselineDifference" : 0
   },
   "Q2.3.6" : {
     "DurationInMicrosecForComputingPredictions" : {
@@ -36,7 +36,7 @@
     }
   },
   "Q2.3.2" : {
-    "JaccardMae" : null,
-    "JaccardMinusCosineDifference" : null
+    "JaccardMae" : 0.7572402152926002,
+    "JaccardMinusCosineDifference" : 0.7572402152926002
   }
 }

@@ -48,7 +48,7 @@ object Predictor extends App {
   })
   assert(test.count == 20000, "Invalid test data")
 
-  val cosine_MAE = Utils.cosine_prediction(test, train)
+  //val cosine_MAE = Utils.cosine_prediction(test, train)
   val jaccard_MAE = Utils.jaccard_prediction(test, train)
 
   // Save answers as JSON

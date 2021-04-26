@@ -84,8 +84,15 @@ object Utils {
     }
     
     def weighted_average (similarities: ParMap[Int, Double], deviations: Map[Int, Double]): Double = {
-        val keys = deviations.keySet.toList.map(user => (user, similarities.getOrElse(user, 0.0)))
-        keys.map(u => u._2 * deviations.getOrElse(u._1, 0.0)).sum / keys.map(u => scala.math.abs(u._2)).sum
+        val keys = deviations.keySet.toList.map(user => (user, similarities.getOrElse(user, 0.0))) 
+        val den = keys.map(u => scala.math.abs(u._2)).sum 
+        if (den == 0.0) {
+            0.0
+        }
+        else{
+            keys.map(u => u._2 * deviations.getOrElse(u._1, 0.0)).sum/den
+        }  
+
     }
 
     def global_dev_similarity (deviations: RDD[(Int, (Int, Double))], similarities: List[(Int, ParMap[Int, Double])]) = {
@@ -124,7 +131,7 @@ object Utils {
 
 
     def jaccard_prediction (test: RDD[Rating], train: RDD[Rating]) = {
-        val user_sets = train.groupBy(_.user).mapValues(x => x.map(_.user).toSet).collectAsMap().par
+        val user_sets = train.groupBy(_.user).mapValues(x => x.filter(_.rating > 3).map(_.item).toSet).collectAsMap().par
         val (average_per_user, deviations) = apu_dev(train)
         val similarities = test.map(_.user).distinct().collect().toList.map(compute_jaccard(user_sets))
         val items = test.map(_.item).collect().toSet 
