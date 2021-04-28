@@ -8,6 +8,8 @@ import org.apache.spark.sql.SparkSession
 import org.apache.log4j.Logger
 import org.apache.log4j.Level
 
+import utils._
+
 class Conf(arguments: Seq[String]) extends ScallopConf(arguments) {
   val train = opt[String](required = true)
   val test = opt[String](required = true)
@@ -15,7 +17,7 @@ class Conf(arguments: Seq[String]) extends ScallopConf(arguments) {
   verify()
 }
 
-case class Rating(user: Int, item: Int, rating: Double)
+//case class Rating(user: Int, item: Int, rating: Double)
 
 object Predictor extends App {
   // Remove these lines if encountering/debugging Spark
@@ -65,14 +67,14 @@ object Predictor extends App {
           "Q3.2.1" -> Map(
             // Discuss the impact of varying k on prediction accuracy on
             // the report.
-            "MaeForK=10" -> 0.0, // Datatype of answer: Double
-            "MaeForK=30" -> 0.0, // Datatype of answer: Double
-            "MaeForK=50" -> 0.0, // Datatype of answer: Double
-            "MaeForK=100" -> 0.0, // Datatype of answer: Double
-            "MaeForK=200" -> 0.0, // Datatype of answer: Double
-            "MaeForK=400" -> 0.0, // Datatype of answer: Double
-            "MaeForK=800" -> 0.0, // Datatype of answer: Double
-            "MaeForK=943" -> 0.0, // Datatype of answer: Double
+            "MaeForK=10" -> Utils.knn(test, train, 10), // Datatype of answer: Double
+            "MaeForK=30" -> Utils.knn(test, train, 30), // Datatype of answer: Double
+            "MaeForK=50" -> Utils.knn(test, train, 50), // Datatype of answer: Double
+            "MaeForK=100" -> Utils.knn(test, train, 100), // Datatype of answer: Double
+            "MaeForK=200" -> Utils.knn(test, train, 200), // Datatype of answer: Double
+            "MaeForK=400" -> Utils.knn(test, train, 400), // Datatype of answer: Double
+            "MaeForK=800" -> Utils.knn(test, train, 800), // Datatype of answer: Double
+            "MaeForK=943" -> Utils.knn(test, train, 943), // Datatype of answer: Double
             "LowestKWithBetterMaeThanBaseline" -> 0, // Datatype of answer: Int
             "LowestKMaeMinusBaselineMae" -> 0.0 // Datatype of answer: Double
           ),

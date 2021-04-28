@@ -1,0 +1,6 @@
+{
+  "Q3.2.5" : {
+    "Top5WithK=30" : [ [ 20, "Angels and Insects (1995)", 5.0 ], [ 57, "Priest (1994)", 5.0 ], [ 236, "Citizen Ruth (1996)", 5.0 ], [ 242, "Kolya (1996)", 5.0 ], [ 251, "Shall We Dance? (1996)", 5.0 ] ],
+    "Top5WithK=300" : [ [ 814, "Great Day in Harlem", 5.0 ], [ 1201, "Marlene Dietrich: Shadow and Light (1996)", 5.0 ], [ 1358, "The Deadly Cure (1996)", 5.0 ], [ 1367, "Faust (1994)", 5.0 ], [ 1463, "Boys", 5.0 ] ]
+  }
+}

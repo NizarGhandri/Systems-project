@@ -48,8 +48,20 @@ object Predictor extends App {
   })
   assert(test.count == 20000, "Invalid test data")
 
-  //val cosine_MAE = Utils.cosine_prediction(test, train)
+  val NUMBER_OF_EXEC = 10
+
+  val cosine_MAE = Utils.cosine_prediction(test, train)
   val jaccard_MAE = Utils.jaccard_prediction(test, train)
+  val time_for_preds = Utils.measure_performance(spark, conf.train(), conf.test(), Nil, NUMBER_OF_EXEC,
+                                                (test: RDD[Rating], train: RDD[Rating]) => {Utils.cosine_prediction(test, train)}
+                                                )
+  val average_time_for_preds = time_for_preds.sum / time_for_preds.size
+  val time_for_similarity = Utils.measure_performance(spark, conf.train(), conf.test(), Nil, NUMBER_OF_EXEC, 
+                                                (test: RDD[Rating], train: RDD[Rating]) => {
+                                                  val (average_per_user, deviations, preprocessed_deviations) = Utils.preprocess_similarity(train)
+                                                  test.map(_.user).distinct().collect().toList.map(Utils.compute_similarity(preprocessed_deviations))
+                                                })
+  val average_time_for_similarity = time_for_similarity.sum / time_for_similarity.size
 
   // Save answers as JSON
   def printToFile(content: String,
@@ -100,10 +112,10 @@ object Predictor extends App {
 
           "Q2.3.6" -> Map(
             "DurationInMicrosecForComputingPredictions" -> Map(
-              "min" -> 0.0,  // Datatype of answer: Double
-              "max" -> 0.0, // Datatype of answer: Double
-              "average" -> 0.0, // Datatype of answer: Double
-              "stddev" -> 0.0 // Datatype of answer: Double
+              "min" -> time_for_preds.min,  // Datatype of answer: Double
+              "max" -> time_for_preds.max, // Datatype of answer: Double
+              "average" -> average_time_for_preds, // Datatype of answer: Double
+              "stddev" -> Utils.stddev(time_for_preds, average_time_for_preds) // Datatype of answer: Double
             )
             // Discuss about the time difference between the similarity method and the methods
             // from milestone 1 in the report.
@@ -111,10 +123,10 @@ object Predictor extends App {
 
           "Q2.3.7" -> Map(
             "DurationInMicrosecForComputingSimilarities" -> Map(
-              "min" -> 0.0,  // Datatype of answer: Double
-              "max" -> 0.0, // Datatype of answer: Double
-              "average" -> 0.0, // Datatype of answer: Double
-              "stddev" -> 0.0 // Datatype of answer: Double
+              "min" -> time_for_similarity.min,  // Datatype of answer: Double
+              "max" -> time_for_similarity.max, // Datatype of answer: Double
+              "average" -> average_time_for_similarity, // Datatype of answer: Double
+              "stddev" -> Utils.stddev(time_for_similarity, average_time_for_similarity) // Datatype of answer: Double
             ),
             "AverageTimeInMicrosecPerSuv" -> 0.0, // Datatype of answer: Double
             "RatioBetweenTimeToComputeSimilarityOverTimeToPredict" -> 0.0 // Datatype of answer: Double

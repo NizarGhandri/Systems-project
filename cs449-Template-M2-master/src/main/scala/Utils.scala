@@ -83,6 +83,18 @@ object Utils {
         (user, preprocessed_deviations.map(x => (x._1, similarity(user_map, x._2))))
     }
     
+
+    def compute_similarity_knn (preprocessed_deviations: UserGroupedDev, k: Int)(user: Int) = {
+        def similarity (user1: Map[Int, Double], user2: Map[Int, Double]): Double = {
+            (user1.keySet).intersect(user2.keySet).toList.map(item => user1.getOrElse(item, 0.0) * user2.getOrElse(item, 0.0)).sum
+        }
+        val user_map = preprocessed_deviations.getOrElse(user, Map((0, 0.0)))
+        (user, preprocessed_deviations.toList.map(x => (x._1, similarity(user_map, x._2)))
+                                      .sortBy(_._2)(Ordering[Double].reverse).tail
+                                      .take(k).toMap.par)
+    }
+
+
     def weighted_average (similarities: ParMap[Int, Double], deviations: Map[Int, Double]): Double = {
         val keys = deviations.keySet.toList.map(user => (user, similarities.getOrElse(user, 0.0))) 
         val den = keys.map(u => scala.math.abs(u._2)).sum 
@@ -111,9 +123,9 @@ object Utils {
         val global_dev = global_dev_similarity(deviations.filter(x => items.contains(x._2._1)), similarities)
         test.map(x => (x.user, x))
             .join(average_per_user)
-            .map{case (user, (r, apu)) =>  ((user, r.item), (apu, r.rating))}//.take(10).foreach(println)
-            .join(global_dev)
-            .mapValues{case ((apu, r), dev) => scala.math.abs(predict(apu, dev) - r)}.values.mean()
+            .map{case (user, (r, apu)) =>  ((user, r.item), (apu, r.rating))}
+            .leftOuterJoin(global_dev)
+            .mapValues{case ((apu, r), dev) => scala.math.abs(predict(apu, dev.getOrElse(0.0)) - r)}.values.mean()
     }
 
 
@@ -131,7 +143,7 @@ object Utils {
 
 
     def jaccard_prediction (test: RDD[Rating], train: RDD[Rating]) = {
-        val user_sets = train.groupBy(_.user).mapValues(x => x.filter(_.rating > 3).map(_.item).toSet).collectAsMap().par
+        val user_sets = train.groupBy(_.user).mapValues(x => x.map(_.item).toSet).collectAsMap().par
         val (average_per_user, deviations) = apu_dev(train)
         val similarities = test.map(_.user).distinct().collect().toList.map(compute_jaccard(user_sets))
         val items = test.map(_.item).collect().toSet 
@@ -139,8 +151,70 @@ object Utils {
         test.map(x => (x.user, x))
             .join(average_per_user)
             .map{case (user, (r, apu)) =>  ((user, r.item), (apu, r.rating))}
-            .join(global_dev)
-            .mapValues{case ((apu, r), dev) => scala.math.abs(predict(apu, dev) - r)}.values.mean()
+            .leftOuterJoin(global_dev)
+            .mapValues{case ((apu, r), dev) => scala.math.abs(predict(apu, dev.getOrElse(0.0)) - r)}.values.mean()
+    }
+
+    def reload_data (spark: org.apache.spark.sql.SparkSession, path_train: String, path_test: String): (RDD[Rating], RDD[Rating]) = {
+        val trainFile = spark.sparkContext.textFile(path_train)
+        val train = trainFile.map(l => {
+            val cols = l.split("\t").map(_.trim)
+            Rating(cols(0).toInt, cols(1).toInt, cols(2).toDouble)
+        }) 
+        val testFile = spark.sparkContext.textFile(path_test)
+        val test = testFile.map(l => {
+            val cols = l.split("\t").map(_.trim)
+            Rating(cols(0).toInt, cols(1).toInt, cols(2).toDouble)
+        }) 
+        (train, test)
+    }
+
+
+    def measure_performance (spark: org.apache.spark.sql.SparkSession, path_train: String, path_test: String, acc: List[Double], number_of_exec: Int, f: (RDD[Rating], RDD[Rating]) => Any): List[Double] = {
+        if (number_of_exec == 0) acc
+        else {
+            val (train, test) = reload_data(spark, path_train, path_test)
+            val t = System.nanoTime()
+            f(test, train)
+            val delta = System.nanoTime() - t
+            measure_performance(spark, path_train, path_test, nano_to_micro(delta)::acc, number_of_exec-1, f)
+        }
+    }
+
+
+    val nano_to_micro = (x: Long) => x/(scala.math.pow(10, 3))
+
+
+    val stddev = (l: List[Double], avg: Double) => scala.math.sqrt(l.map(x => scala.math.pow((x - avg), 2)).sum / l.size)
+
+
+    def knn(test: RDD[Rating], train: RDD[Rating], k: Int) = {
+        val (average_per_user, deviations, preprocessed_deviations) = preprocess_similarity(train)
+        val similarities = test.map(_.user).distinct().collect().toList.map(compute_similarity_knn(preprocessed_deviations, k))
+        val items = test.map(_.item).collect().toSet 
+        val global_dev = global_dev_similarity(deviations.filter(x => items.contains(x._2._1)), similarities)
+        test.map(x => (x.user, x))
+            .join(average_per_user)
+            .map{case (user, (r, apu)) =>  ((user, r.item), (apu, r.rating))}
+            .leftOuterJoin(global_dev)
+            .mapValues{case ((apu, r), dev) => scala.math.abs(predict(apu, dev.getOrElse(0.0)) - r)}.values.mean()
+        
+    }
+
+
+    def recommend (train: RDD[Rating], test: RDD[(Rating, String)], user: Int, number_of_recommendations: Int, k: Int) = {
+        val (average_per_user, deviations, preprocessed_deviations) = preprocess_similarity(train)
+        val similarities = test.map(_._1.user).distinct().collect().toList.map(compute_similarity_knn(preprocessed_deviations, k))
+        val items = test.map(_._1.item).collect().toSet 
+        val global_dev = global_dev_similarity(deviations.filter(x => items.contains(x._2._1)), similarities)
+        val res = test.map(x => (x._1.user, x))
+                      .join(average_per_user)
+                      .map{case (user, ((r, name), apu)) =>  ((user, r.item), (apu, r.rating, name))}
+                      .leftOuterJoin(global_dev)
+        res.map{case ((user, item), ((apu, r, name), dev)) => ((-predict(apu, dev.getOrElse(0.0)), item), name)}
+            .sortByKey()
+            .take(number_of_recommendations).toList
+            .map(x => x._1._2::x._2::(-x._1._1)::Nil)
     }
     
 

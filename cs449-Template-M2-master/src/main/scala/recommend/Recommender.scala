@@ -8,6 +8,8 @@ import org.apache.spark.sql.SparkSession
 import org.apache.log4j.Logger
 import org.apache.log4j.Level
 
+import utils._
+
 class Conf(arguments: Seq[String]) extends ScallopConf(arguments) {
   val data = opt[String](required = true)
   val personal = opt[String](required = true)
@@ -15,7 +17,7 @@ class Conf(arguments: Seq[String]) extends ScallopConf(arguments) {
   verify()
 }
 
-case class Rating(user: Int, item: Int, rating: Double)
+//case class Rating(user: Int, item: Int, rating: Double)
 
 object Recommender extends App {
   // Remove these lines if encountering/debugging Spark
@@ -38,10 +40,13 @@ object Recommender extends App {
   })
   assert(data.count == 100000, "Invalid data")
 
-  println("Loading personal data from: " + conf.personal())
+  println("Loading personal data from: " + conf.personal()) 
   val personalFile = spark.sparkContext.textFile(conf.personal())
-  // TODO: Extract ratings and movie titles
   assert(personalFile.count == 1682, "Invalid personal data")
+
+  val personal = personalFile.map(l => l.split(",").map(_.trim))
+  val test = personal.filter(x => x.size == 2).map(x => (Rating(944, x(0).toInt,0), x(1)))
+  val train = personal.filter(x => x.size == 3).map(x => Rating(944, x(0).toInt, x(2).toDouble))
 
 
 
@@ -68,22 +73,10 @@ object Recommender extends App {
 
           "Q3.2.5" -> Map(
             "Top5WithK=30" ->
-              List[Any](
-                List(0, "", 0.0), // Datatypes for answer: Int, String, Double
-                List(0, "", 0.0), // Representing: Movie Id, Movie Title, Predicted Rating
-                List(0, "", 0.0), // respectively
-                List(0, "", 0.0),
-                List(0, "", 0.0)
-              ),
+              Utils.recommend(data.union(train), test, 944, 5, 30),
 
             "Top5WithK=300" ->
-              List[Any](
-                List(0, "", 0.0), // Datatypes for answer: Int, String, Double
-                List(0, "", 0.0), // Representing: Movie Id, Movie Title, Predicted Rating
-                List(0, "", 0.0), // respectively
-                List(0, "", 0.0),
-                List(0, "", 0.0)
-              )
+               Utils.recommend(data.union(train), test, 944, 5, 300)
 
             // Discuss the differences in rating depending on value of k in the report.
           )
