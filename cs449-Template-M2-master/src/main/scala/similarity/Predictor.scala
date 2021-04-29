@@ -48,9 +48,17 @@ object Predictor extends App {
   })
   assert(test.count == 20000, "Invalid test data")
 
-  val NUMBER_OF_EXEC = 10
+  val NUMBER_OF_EXEC = 5
 
-  val cosine_MAE = Utils.cosine_prediction(test, train)
+  val (cosine_MAE, similarities) = Utils.cosine_prediction(test, train)
+  val user_sets = train.groupBy(_.user).mapValues(x => x.map(_.item).toSet).collectAsMap().par
+  val sim_mult = test.map(_.user).distinct().flatMap(x => {
+    val u_set = user_sets.getOrElse(x, Set())
+    user_sets.map(y => (u_set intersect y._2).size.toDouble).toList
+    }).collect.toList
+
+  val average_similarity = sim_mult.sum / sim_mult.size
+
   val jaccard_MAE = Utils.jaccard_prediction(test, train)
   val time_for_preds = Utils.measure_performance(spark, conf.train(), conf.test(), Nil, NUMBER_OF_EXEC,
                                                 (test: RDD[Rating], train: RDD[Rating]) => {Utils.cosine_prediction(test, train)}
@@ -92,22 +100,22 @@ object Predictor extends App {
           "Q2.3.3" -> Map(
             // Provide the formula that computes the number of similarity computations
             // as a function of U in the report.
-            "NumberOfSimilarityComputationsForU1BaseDataset" -> 0 // Datatype of answer: Int
+            "NumberOfSimilarityComputationsForU1BaseDataset" ->  similarities.size * similarities.head._2.size // Datatype of answer: Int
           ),
 
           "Q2.3.4" -> Map(
             "CosineSimilarityStatistics" -> Map(
-              "min" -> 0.0,  // Datatype of answer: Double
-              "max" -> 0.0, // Datatype of answer: Double
-              "average" -> 0.0, // Datatype of answer: Double
-              "stddev" -> 0.0 // Datatype of answer: Double
+              "min" -> sim_mult.min,  // Datatype of answer: Double
+              "max" -> sim_mult.max, // Datatype of answer: Double
+              "average" -> average_similarity, // Datatype of answer: Double
+              "stddev" -> Utils.stddev(sim_mult, average_similarity) // Datatype of answer: Double
             )
           ),
 
           "Q2.3.5" -> Map(
             // Provide the formula that computes the amount of memory for storing all S(u,v)
             // as a function of U in the report.
-            "TotalBytesToStoreNonZeroSimilarityComputationsForU1BaseDataset" -> 0 // Datatype of answer: Int
+            "TotalBytesToStoreNonZeroSimilarityComputationsForU1BaseDataset" -> similarities.flatMap(x => x._2.toList).filter(x => x._2 !=0).size * 8  // Datatype of answer: Int
           ),
 
           "Q2.3.6" -> Map(
@@ -128,8 +136,8 @@ object Predictor extends App {
               "average" -> average_time_for_similarity, // Datatype of answer: Double
               "stddev" -> Utils.stddev(time_for_similarity, average_time_for_similarity) // Datatype of answer: Double
             ),
-            "AverageTimeInMicrosecPerSuv" -> 0.0, // Datatype of answer: Double
-            "RatioBetweenTimeToComputeSimilarityOverTimeToPredict" -> 0.0 // Datatype of answer: Double
+            "AverageTimeInMicrosecPerSuv" -> average_time_for_similarity / (similarities.size * similarities.head._2.size), // Datatype of answer: Double
+            "RatioBetweenTimeToComputeSimilarityOverTimeToPredict" -> average_time_for_similarity/average_time_for_preds // Datatype of answer: Double
           )
          )
         json = Serialization.writePretty(answers)

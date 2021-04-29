@@ -116,16 +116,16 @@ object Utils {
 
 
 
-    def cosine_prediction (test: RDD[Rating], train: RDD[Rating]): Double = {
+    def cosine_prediction (test: RDD[Rating], train: RDD[Rating]) = {
         val (average_per_user, deviations, preprocessed_deviations) = preprocess_similarity(train)
         val similarities = test.map(_.user).distinct().collect().toList.map(compute_similarity(preprocessed_deviations))
         val items = test.map(_.item).collect().toSet 
         val global_dev = global_dev_similarity(deviations.filter(x => items.contains(x._2._1)), similarities)
-        test.map(x => (x.user, x))
+        (test.map(x => (x.user, x))
             .join(average_per_user)
             .map{case (user, (r, apu)) =>  ((user, r.item), (apu, r.rating))}
             .leftOuterJoin(global_dev)
-            .mapValues{case ((apu, r), dev) => scala.math.abs(predict(apu, dev.getOrElse(0.0)) - r)}.values.mean()
+            .mapValues{case ((apu, r), dev) => scala.math.abs(predict(apu, dev.getOrElse(0.0)) - r)}.values.mean(), similarities)
     }
 
 
@@ -188,7 +188,7 @@ object Utils {
     val stddev = (l: List[Double], avg: Double) => scala.math.sqrt(l.map(x => scala.math.pow((x - avg), 2)).sum / l.size)
 
 
-    def knn(test: RDD[Rating], train: RDD[Rating], k: Int) = {
+    def knn(test: RDD[Rating], train: RDD[Rating], k: Int): Double = {
         val (average_per_user, deviations, preprocessed_deviations) = preprocess_similarity(train)
         val similarities = test.map(_.user).distinct().collect().toList.map(compute_similarity_knn(preprocessed_deviations, k))
         val items = test.map(_.item).collect().toSet 
