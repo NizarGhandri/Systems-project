@@ -1,27 +1,27 @@
 {
   "Q2.3.3" : {
-    "NumberOfSimilarityComputationsForU1BaseDataset" : 432837
+    "NumberOfSimilarityComputationsForU1BaseDataset" : 445096
   },
   "Q2.3.7" : {
     "DurationInMicrosecForComputingSimilarities" : {
-      "min" : 1728379.996,
-      "max" : 1991492.777,
-      "average" : 1797767.775,
-      "stddev" : 98024.93518726059
+      "min" : 1687535.962,
+      "max" : 1911922.495,
+      "average" : 1744446.398,
+      "stddev" : 84447.51308758967
     },
-    "AverageTimeInMicrosecPerSuv" : 4.153452165595825,
-    "RatioBetweenTimeToComputeSimilarityOverTimeToPredict" : 0.15582839740490023
+    "AverageTimeInMicrosecPerSuv" : 4.030261733631829,
+    "RatioBetweenTimeToComputeSimilarityOverTimeToPredict" : 0.1518524926447308
   },
   "Q2.3.4" : {
     "CosineSimilarityStatistics" : {
       "min" : 0.0,
-      "max" : 582.0,
-      "average" : 9.887613582018172,
-      "stddev" : 15.25729658735809
+      "max" : 685.0,
+      "average" : 12.282026798713087,
+      "stddev" : 18.520309549119712
     }
   },
   "Q2.3.5" : {
-    "TotalBytesToStoreNonZeroSimilarityComputationsForU1BaseDataset" : 3100728
+    "TotalBytesToStoreNonZeroSimilarityComputationsForU1BaseDataset" : 3299912
   },
   "Q2.3.1" : {
     "CosineBasedMae" : 0.7477653398324908,
@@ -29,10 +29,10 @@
   },
   "Q2.3.6" : {
     "DurationInMicrosecForComputingPredictions" : {
-      "min" : 1.1254052846E7,
-      "max" : 1.2072389922E7,
-      "average" : 1.15368431232E7,
-      "stddev" : 288492.09744432126
+      "min" : 1.1145715224E7,
+      "max" : 1.1915748438E7,
+      "average" : 1.14877692662E7,
+      "stddev" : 292604.4758623429
     }
   },
   "Q2.3.2" : {

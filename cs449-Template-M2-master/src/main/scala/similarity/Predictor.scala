@@ -51,11 +51,12 @@ object Predictor extends App {
   val NUMBER_OF_EXEC = 5
 
   val (cosine_MAE, similarities) = Utils.cosine_prediction(test, train)
+  val users = train.map(_.user).distinct()
   val user_sets = train.groupBy(_.user).mapValues(x => x.map(_.item).toSet).collectAsMap().par
-  val sim_mult = test.map(_.user).distinct().flatMap(x => {
+  val sim_mult = users.flatMap(x => {
     val u_set = user_sets.getOrElse(x, Set())
-    user_sets.map(y => (u_set intersect y._2).size.toDouble).toList
-    }).collect.toList
+    user_sets.map(y => (List(y._1, x).sorted, (u_set intersect y._2).size.toDouble)).toList
+    }).distinct().values.collect.toList
 
   val average_similarity = sim_mult.sum / sim_mult.size
 
@@ -100,7 +101,7 @@ object Predictor extends App {
           "Q2.3.3" -> Map(
             // Provide the formula that computes the number of similarity computations
             // as a function of U in the report.
-            "NumberOfSimilarityComputationsForU1BaseDataset" ->  similarities.size * similarities.head._2.size // Datatype of answer: Int
+            "NumberOfSimilarityComputationsForU1BaseDataset" ->  (users.count*(users.count-1)/2 + users.count) // Datatype of answer: Int
           ),
 
           "Q2.3.4" -> Map(
@@ -115,7 +116,7 @@ object Predictor extends App {
           "Q2.3.5" -> Map(
             // Provide the formula that computes the amount of memory for storing all S(u,v)
             // as a function of U in the report.
-            "TotalBytesToStoreNonZeroSimilarityComputationsForU1BaseDataset" -> similarities.flatMap(x => x._2.toList).filter(x => x._2 !=0).size * 8  // Datatype of answer: Int
+            "TotalBytesToStoreNonZeroSimilarityComputationsForU1BaseDataset" -> sim_mult.filter(x => x !=0).size * 8  // Datatype of answer: Int
           ),
 
           "Q2.3.6" -> Map(

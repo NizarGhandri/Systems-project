@@ -48,11 +48,11 @@ object Predictor extends App {
   })
   assert(test.count == 20000, "Invalid test data")
 
-  val values_k = List(10, 30, 50, 100, 200, 400, 800, 943)
+  val values_k = List(10, 30, 50, 100, 200, 300, 400, 800, 942).par
 
-  val results = values_k.map(k => Utils.knn(test, train, k)).toArray
+  val results= values_k.map(k => Utils.knn(test, train, k)).toArray
 
-  val RAM = 8*scala.math.pow(10, 9)
+  val RAM = 1.7179860388E10 // 16 GigaBytes
 
   // Save answers as JSON
   def printToFile(content: String,
@@ -78,29 +78,31 @@ object Predictor extends App {
             "MaeForK=50" -> results(2), // Datatype of answer: Double
             "MaeForK=100" -> results(3), // Datatype of answer: Double
             "MaeForK=200" -> results(4), // Datatype of answer: Double
-            "MaeForK=400" -> results(5), // Datatype of answer: Double
-            "MaeForK=800" -> results(6), // Datatype of answer: Double
-            "MaeForK=943" -> results(7), // Datatype of answer: Double
+            "MaeForK=300" -> results(5), // Datatype of answer: Double
+            "MaeForK=400" -> results(6), // Datatype of answer: Double
+            "MaeForK=800" -> results(7), // Datatype of answer: Double
+            "MaeForK=942" -> results(8), // Datatype of answer: Double
             "LowestKWithBetterMaeThanBaseline" -> 100, // Datatype of answer: Int
-            "LowestKMaeMinusBaselineMae" -> (results(1) - Utils.baseline_MAE) // Datatype of answer: Double
+            "LowestKMaeMinusBaselineMae" -> (results(3) - Utils.baseline_MAE) // Datatype of answer: Double
           ),
 
           "Q3.2.2" ->  Map(
             // Provide the formula the computes the minimum number of bytes required,
             // as a function of the size U in the report.
-            "MinNumberOfBytesForK=10" -> 459*10*8, // Datatype of answer: Int
-            "MinNumberOfBytesForK=30" -> 459*30*8, // Datatype of answer: Int
-            "MinNumberOfBytesForK=50" -> 459*50*8, // Datatype of answer: Int
-            "MinNumberOfBytesForK=100" -> 459*100*8, // Datatype of answer: Int
-            "MinNumberOfBytesForK=200" -> 459*200*8, // Datatype of answer: Int
-            "MinNumberOfBytesForK=400" -> 459*400*8, // Datatype of answer: Int
-            "MinNumberOfBytesForK=800" -> 459*800*8, // Datatype of answer: Int
-            "MinNumberOfBytesForK=943" -> 459*943*8 // Datatype of answer: Int
+            "MinNumberOfBytesForK=10" -> 943*10*8, // Datatype of answer: Int
+            "MinNumberOfBytesForK=30" -> 943*30*8, // Datatype of answer: Int
+            "MinNumberOfBytesForK=50" -> 943*50*8, // Datatype of answer: Int
+            "MinNumberOfBytesForK=100" -> 943*100*8, // Datatype of answer: Int
+            "MinNumberOfBytesForK=200" -> 943*200*8, // Datatype of answer: Int
+            "MinNumberOfBytesForK=300" -> 943*300*8, // Datatype of answer: Int
+            "MinNumberOfBytesForK=400" -> 943*400*8, // Datatype of answer: Int
+            "MinNumberOfBytesForK=800" -> 943*800*8, // Datatype of answer: Int
+            "MinNumberOfBytesForK=942" -> 943*942*8 // Datatype of answer: Int
           ),
 
           "Q3.2.3" -> Map(
             "SizeOfRamInBytes" -> RAM, // Datatype of answer: Int
-            "MaximumNumberOfUsersThatCanFitInRam" -> RAM/(8*3*944) // Datatype of answer: Int
+            "MaximumNumberOfUsersThatCanFitInRam" -> RAM/(8*3*100) // Datatype of answer: Int
           )
 
           // Answer the Question 3.2.4 exclusively on the report.
