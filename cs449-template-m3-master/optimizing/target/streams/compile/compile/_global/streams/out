@@ -1,0 +1,13 @@
+[0m[[0m[31merror[0m] [0m[0m/home/focus/Bureau/systems/Systems-project/cs449-template-m3-master/optimizing/Utils.scala:137:110: not found: type Rating[0m
+[0m[[0m[31merror[0m] [0m[0m     def reload_data (spark: org.apache.spark.sql.SparkSession, path_train: String, path_test: String): (RDD[Rating], RDD[Rating]) = {[0m
+[0m[[0m[31merror[0m] [0m[0m                                                                                                             ^[0m
+[0m[[0m[31merror[0m] [0m[0m/home/focus/Bureau/systems/Systems-project/cs449-template-m3-master/optimizing/Utils.scala:137:123: not found: type Rating[0m
+[0m[[0m[31merror[0m] [0m[0m     def reload_data (spark: org.apache.spark.sql.SparkSession, path_train: String, path_test: String): (RDD[Rating], RDD[Rating]) = {[0m
+[0m[[0m[31merror[0m] [0m[0m                                                                                                                          ^[0m
+[0m[[0m[31merror[0m] [0m[0m/home/focus/Bureau/systems/Systems-project/cs449-template-m3-master/optimizing/Utils.scala:141:13: not found: value Rating[0m
+[0m[[0m[31merror[0m] [0m[0m            Rating(cols(0).toInt, cols(1).toInt, cols(2).toDouble)[0m
+[0m[[0m[31merror[0m] [0m[0m            ^[0m
+[0m[[0m[31merror[0m] [0m[0m/home/focus/Bureau/systems/Systems-project/cs449-template-m3-master/optimizing/Utils.scala:146:13: not found: value Rating[0m
+[0m[[0m[31merror[0m] [0m[0m            Rating(cols(0).toInt, cols(1).toInt, cols(2).toDouble)[0m
+[0m[[0m[31merror[0m] [0m[0m            ^[0m
+[0m[[0m[31merror[0m] [0m[0mfour errors found[0m

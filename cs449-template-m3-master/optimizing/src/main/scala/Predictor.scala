@@ -5,6 +5,8 @@ import breeze.numerics._
 import scala.io.Source
 import scala.collection.mutable.ArrayBuffer
 
+import utils._
+
 class Conf(arguments: Seq[String]) extends ScallopConf(arguments) {
   val train = opt[String](required = true)
   val test = opt[String](required = true)
@@ -50,6 +52,16 @@ object Predictor {
 
     println("Compute predictions on test data...")
 
+    val pred_100 = Utils.knn(test, train, 100)
+    val pred_200 = Utils.knn(test, train, 200)
+
+    val perf_knn = Utils.measure_performance(Nil, 5, () => Utils.knn(test, train, 100))
+    val perf_pred = Utils.measure_performance(Nil, 5, () => Utils.knn(test, train, 100))
+    val avg_knn = perf_knn.reduce(_+_)/ perf_knn.size
+    val avg_pred = perf_pred.reduce(_+_)/ perf_pred.size
+
+
+
     // Save answers as JSON
     def printToFile(content: String,
                     location: String = "./answers.json") =
@@ -68,23 +80,23 @@ object Predictor {
 
           val answers: Map[String, Any] = Map(
             "Q3.3.1" -> Map(
-              "MaeForK=100" -> 0.0, // Datatype of answer: Double
-              "MaeForK=200" -> 0.0  // Datatype of answer: Double
+              "MaeForK=100" -> Utils.mae(pred_100, test), // Datatype of answer: Double
+              "MaeForK=200" -> Utils.mae(pred_200, test)  // Datatype of answer: Double
             ),
             "Q3.3.2" ->  Map(
               "DurationInMicrosecForComputingKNN" -> Map(
-                "min" -> 0.0,  // Datatype of answer: Double
-                "max" -> 0.0, // Datatype of answer: Double
-                "average" -> 0.0, // Datatype of answer: Double
-                "stddev" -> 0.0 // Datatype of answer: Double
+                "min" -> perf_knn.min,  // Datatype of answer: Double
+                "max" -> perf_knn.max, // Datatype of answer: Double
+                "average" -> avg_knn, // Datatype of answer: Double
+                "stddev" -> Utils.stddev(perf_knn, avg_knn) // Datatype of answer: Double
               )
             ),
             "Q3.3.3" ->  Map(
               "DurationInMicrosecForComputingPredictions" -> Map(
-                "min" -> 0.0,  // Datatype of answer: Double
-                "max" -> 0.0, // Datatype of answer: Double
-                "average" -> 0.0, // Datatype of answer: Double
-                "stddev" -> 0.0 // Datatype of answer: Double
+                "min" -> perf_pred.min,  // Datatype of answer: Double
+                "max" -> perf_pred.max, // Datatype of answer: Double
+                "average" -> avg_pred, // Datatype of answer: Double
+                "stddev" -> Utils.stddev(perf_pred, avg_pred) // Datatype of answer: Double
               )
             )
             // Answer the Question 3.3.4 exclusively on the report.
