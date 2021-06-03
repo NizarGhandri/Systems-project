@@ -1,0 +1,19 @@
+[0m[[0m[31merror[0m] [0m[0m/home/focus/Bureau/systems/Systems-project/cs449-template-m3-master/scaling/Utils.scala:121:71: not enough arguments for method sim_dev_apu: (train: breeze.linalg.CSCMatrix[Double], k: Int, sc: org.apache.spark.SparkContext)(breeze.linalg.CSCMatrix[Double], breeze.linalg.CSCMatrix[Double], breeze.linalg.DenseVector[Double]).[0m
+[0m[[0m[31merror[0m] [0m[0mUnspecified value parameter sc.[0m
+[0m[[0m[31merror[0m] [0m[0m        val (similarities, deviations, average_per_user) = sim_dev_apu(train, k)[0m
+[0m[[0m[31merror[0m] [0m[0m                                                                      ^[0m
+[0m[[0m[31merror[0m] [0m[0m/home/focus/Bureau/systems/Systems-project/cs449-template-m3-master/scaling/Utils.scala:122:22: not found: value sc[0m
+[0m[[0m[31merror[0m] [0m[0m        val br_sim = sc.broadcast(similarities)[0m
+[0m[[0m[31merror[0m] [0m[0m                     ^[0m
+[0m[[0m[31merror[0m] [0m[0m/home/focus/Bureau/systems/Systems-project/cs449-template-m3-master/scaling/Utils.scala:123:22: not found: value sc[0m
+[0m[[0m[31merror[0m] [0m[0m        val br_dev = sc.broadcast(deviations)[0m
+[0m[[0m[31merror[0m] [0m[0m                     ^[0m
+[0m[[0m[31merror[0m] [0m[0m/home/focus/Bureau/systems/Systems-project/cs449-template-m3-master/scaling/Utils.scala:124:23: type mismatch;[0m
+[0m[[0m[31merror[0m] [0m[0m found   : Any[0m
+[0m[[0m[31merror[0m] [0m[0m required: breeze.linalg.DenseVector[Double][0m
+[0m[[0m[31merror[0m] [0m[0m        predict(test, average_per_user, global_dev(sc.parallelize((0 until train.cols)), br_dev, br_sim), global_average)[0m
+[0m[[0m[31merror[0m] [0m[0m                      ^[0m
+[0m[[0m[31merror[0m] [0m[0m/home/focus/Bureau/systems/Systems-project/cs449-template-m3-master/scaling/Utils.scala:124:52: not found: value sc[0m
+[0m[[0m[31merror[0m] [0m[0m        predict(test, average_per_user, global_dev(sc.parallelize((0 until train.cols)), br_dev, br_sim), global_average)[0m
+[0m[[0m[31merror[0m] [0m[0m                                                   ^[0m
+[0m[[0m[31merror[0m] [0m[0m5 errors found[0m
