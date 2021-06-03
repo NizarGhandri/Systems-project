@@ -52,13 +52,23 @@ object Predictor {
 
     println("Compute predictions on test data...")
 
-    val pred_100 = Utils.knn(test, train, 100)
-    val pred_200 = Utils.knn(test, train, 200)
+    var global_average = 0.0
+    for ((k, v) <- train.activeIterator) {
+      global_average += v 
+    }
 
-    val perf_knn = Utils.measure_performance(Nil, 5, () => Utils.knn(test, train, 100))
-    val perf_pred = Utils.measure_performance(Nil, 5, () => Utils.knn(test, train, 100))
+    global_average /= train.activeSize
+
+
+    val mae_100 = Utils.mae(Utils.knn(test, train, 100, global_average), test)
+    val mae_200 = Utils.mae(Utils.knn(test, train, 200, global_average), test)
+
+
+    val perf_knn = Utils.measure_performance(5, () => Utils.sim_dev_apu(test, train, 200))
+    val perf_pred = Utils.measure_performance(5, () => Utils.knn(test, train, 200, global_average))
     val avg_knn = perf_knn.reduce(_+_)/ perf_knn.size
     val avg_pred = perf_pred.reduce(_+_)/ perf_pred.size
+    
 
 
 
@@ -80,8 +90,8 @@ object Predictor {
 
           val answers: Map[String, Any] = Map(
             "Q3.3.1" -> Map(
-              "MaeForK=100" -> Utils.mae(pred_100, test), // Datatype of answer: Double
-              "MaeForK=200" -> Utils.mae(pred_200, test)  // Datatype of answer: Double
+              "MaeForK=100" -> mae_100, // Datatype of answer: Double
+              "MaeForK=200" -> mae_200  // Datatype of answer: Double
             ),
             "Q3.3.2" ->  Map(
               "DurationInMicrosecForComputingKNN" -> Map(

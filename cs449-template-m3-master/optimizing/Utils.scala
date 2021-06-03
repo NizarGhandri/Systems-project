@@ -25,21 +25,7 @@ object Utils {
         (x - avg)/scale(x, avg)
     }
 
-    def multiply_iter (a: CSCMatrix[Double], b: CSCMatrix[Double]) = {
-        val n = a.cols
-        val m = b.rows
-        assert(n == m)
-        val b_tr = b.t
-        val builder = new CSCMatrix.Builder[Double](rows=a.rows, cols=b_tr.rows)
-        for (i <- 0 until a.rows) {
-            for (j <- 0 until b_tr.rows) {
-                builder.add(i, j, a(i, 0 until n).t.toDenseVector.t * b_tr(i, 0 until m).t.toDenseVector)
-            }
-        }
-        builder.result()
-    }
-
-    val l2_norm = (m: CSCMatrix[Double]) => ((m *:* m)*reducer(m.cols)).mapValues(scala.math.sqrt)
+    val l2_norm = (m: CSCMatrix[Double]) => (m.mapActiveValues(x => x*x)*reducer(m.cols)).mapValues(scala.math.sqrt)
     val l1_norm = (m: CSCMatrix[Double]) =>  m.mapActiveValues(_.abs)*reducer(m.cols)
 
     def average_per_user(train: CSCMatrix[Double]) =  {
@@ -73,43 +59,41 @@ object Utils {
     }
 
     def compute_similarity(preprocessed: CSCMatrix[Double], k: Int) = {
-        val all_sims = preprocessed*preprocessed.t//multiply_iter(preprocessed, preprocessed.t) 
         val users = preprocessed.rows
+        val items = preprocessed.cols
         val builder = new CSCMatrix.Builder[Double](rows=users, cols=users)
         for (i <- 0 until users) {
-            for (j <- argtopk(all_sims(i, 0 until users).t, k+1)){
-                if (j != i) builder.add(i, j, all_sims(i, j))
+            val all_sims = preprocessed * preprocessed(i, 0 until items).t.toDenseVector
+            for (j <- argtopk(all_sims, k+1)){
+                if (j != i) builder.add(i, j, all_sims(j))
             }
         }
         builder.result()
     }
 
     def global_dev(deviations: CSCMatrix[Double], similarities: CSCMatrix[Double]) = {
-        val dev_transposed = deviations.t //for data locality
-        //val similarities_per_item = similarities *:* deviations.mapActiveValues(x => 1.0) 
         val r = similarities.rows
         val c = deviations.cols
-        val l1 = similarities.mapActiveValues(_.abs) * deviations.mapActiveValues(x => 1.0)
-        val users = similarities.rows
-        //val l1_sim = l1_norm(adj)
+        val l1 = similarities.mapActiveValues(_.abs)
         val builder = new CSCMatrix.Builder[Double](rows=r, cols=c)
         for (i <- 0 until c) {
-            val adj = similarities * dev_transposed(i, 0 until r).t.toDenseVector  
+            val vect = deviations(0 until r, i).toDenseVector 
+            val adj = (similarities * vect) /:/  (l1 * vect.map(x => if(x == 0.0) 0.0 else 1.0))
             for (k <- 0 until r) {
-                //val l1 = deviations(0 until users, col).mapActiveValues(_.abs).toDenseVector.t :*:  simiarities(row) 
-                val v = adj(k)/l1(k, i)
+                val v = adj(k)
                 if (!v.isNaN) builder.add(k, i, v)   
             }
         }
         builder.result()
     }
 
-    def predict (test: CSCMatrix[Double], apu: DenseVector[Double], global_dev: CSCMatrix[Double]) = {
+    def predict (test: CSCMatrix[Double], apu: DenseVector[Double], global_dev: CSCMatrix[Double], global_average: Double) = {
         val builder = new CSCMatrix.Builder[Double](rows=test.rows, cols=test.cols)
          for ((k,v) <- test.activeIterator) {
             val row = k._1
             val col = k._2
-            builder.add(row, col, predict_single(apu(row), global_dev(row, col)))   
+            val pred = predict_single(apu(row), global_dev(row, col))
+            builder.add(row, col, if(pred == 0.0) global_average else pred)   
         }
         builder.result()
     }
@@ -118,11 +102,15 @@ object Utils {
         avg_rating_user + avg_deviation_item*scale((avg_rating_user + avg_deviation_item), avg_rating_user)
     }
 
-    def knn(test: CSCMatrix[Double], train: CSCMatrix[Double], k: Int) = {
+    def sim_dev_apu (test: CSCMatrix[Double], train: CSCMatrix[Double], k: Int) = {
         val (average_per_user, deviations, preprocessed_deviations) = preprocess_similarity(train)
         val similarities = compute_similarity(preprocessed_deviations, k)
-        val gdev = global_dev(deviations, similarities)
-        predict(test, average_per_user, gdev)
+        (similarities, deviations, average_per_user)
+    }
+
+    def knn(test: CSCMatrix[Double], train: CSCMatrix[Double], k: Int, global_average: Double) = {
+        val (similarities, deviations, average_per_user) = sim_dev_apu(test, train, k)
+        predict(test, average_per_user, global_dev(deviations, similarities), global_average)
     }
 
     def mae (test: CSCMatrix[Double], pred: CSCMatrix[Double]) = {
@@ -148,15 +136,16 @@ object Utils {
     //     (train, test)
     // }
 
+    def measure (f: () => Any, x: Int)= {
+        println(x)
+        val t = System.nanoTime()
+        f()
+        nano_to_micro(System.nanoTime() - t)
+    }
 
-    def measure_performance ( acc: List[Double], number_of_exec: Int, f: () => Any): List[Double] = {
-        if (number_of_exec == 0) acc
-        else {
-            val t = System.nanoTime()
-            f()
-            val delta = System.nanoTime() - t
-            measure_performance(nano_to_micro(delta)::acc, number_of_exec-1, f)
-        }
+    def measure_performance (number_of_exec: Int, f: () => Any) = {
+        (0 until number_of_exec).toList.map(x => measure(f, x))
+        //for (i <- 0 until number_of_exec) yield nano_to_micro(measure(f))
     }
 
 
